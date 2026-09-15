@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #ffffff;
+    color: #000000;
+}
+
+h1, h2, h3 {
+    color: #000000;
+}
+
+hr {
+    margin: 20px 0;
+    border: none;
+    border-top: 1px solid #000000;
+}
+
+input, select, textarea {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    padding: 4px;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+}
+
+label {
+    font-weight: bold;
+    color: #000000;
+}
+
+button {
+    padding: 6px 16px;
+    margin: 3px;
+    cursor: pointer;
+    border: 1px solid #000000;
+    background: #ffffff;
+    color: #000000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #f0f0f0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table th {
+    background: #ffffff;
+    font-weight: bold;
+    text-align: left;
+    color: #000000;
+}
+
+table th, table td {
+    border: 1px solid #000000;
+    padding: 8px;
+    color: #000000;
+}
+
+.message {
+    padding: 0;
+    margin: 10px 0;
+    background: none;
+    color: #000000;
+}
+
+.comment-block {
+    border: 1px solid #000000;
+    padding: 10px;
+    background: #ffffff;
+    margin: 10px 0;
+    color: #000000;
+}
+
+a {
+    color: #000000;
+    text-decoration: underline;
+}
+
+a:hover {
+    text-decoration: none;
+}

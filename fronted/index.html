@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <h1>Экспертное заключение</h1>
+    <hr>
+
+    <form id="loginForm">
+        <p>
+            <label>Email:</label><br>
+            <input type="email" id="email"
+                   placeholder="example@mail.com"
+                   maxlength="100"
+                   autocomplete="username"
+                   required>
+        </p>
+        <p>
+            <label>Пароль:</label><br>
+            <input type="password" id="password"
+                   placeholder="Введите пароль"
+                   maxlength="100"
+                   autocomplete="current-password"
+                   required>
+        </p>
+        <button type="submit">Войти</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script src="js/common.js"></script>
+    <script src="js/auth.js"></script>
+
+</body>
+</html>

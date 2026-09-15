@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои документы</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <h1>Экспертное заключение</h1>
+    <hr>
+
+    <p>
+        <strong>Пользователь:</strong> <span id="userName">Не авторизован</span>
+        <button onclick="logout()">Выйти</button>
+    </p>
+
+    <hr>
+
+    <h2>Мои документы</h2>
+
+    <p>
+        <button onclick="createDocument()">Создать новый документ</button>
+        <button onclick="refreshList()">Обновить список</button>
+    </p>
+
+    <p>
+        <strong>Фильтр по статусу:</strong>
+        <select id="statusFilter" onchange="loadDocuments()">
+            <option value="">Все</option>
+            <option value="draft">Черновик</option>
+            <option value="in_review">На проверке</option>
+            <option value="ready_to_sign">Готов к подписанию</option>
+            <option value="signed">Подписан</option>
+            <option value="rejected">Отклонен</option>
+        </select>
+    </p>
+
+    <div id="documentsList">
+        <p>Загрузка...</p>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/dashboard_user.js"></script>
+
+</body>
+</html>

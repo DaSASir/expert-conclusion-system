@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Работа с документом</title>
+</head>
+<body>
+
+    <h1>Экспертное заключение</h1>
+    <hr>
+
+    <p>
+        <strong>Пользователь:</strong> <span id="userName">Не авторизован</span>
+        <button onclick="logout()">Выйти</button>
+    </p>
+
+    <hr>
+
+    <h2>Заполнение документа</h2>
+
+    <table border="0" cellpadding="10" cellspacing="0" width="100%">
+        <tr>
+            <td width="45%" valign="top">
+                <form id="documentForm">
+                    <p>
+                        <label>Дата утверждения:</label><br>
+                        <input type="date" id="docDate">
+                    </p>
+
+                    <p>
+                        <label>ФИО автора:</label><br>
+                        <input type="text" id="docAuthor" size="45" placeholder="Замятин А.О., Бакланова О.Е.">
+                    </p>
+
+                    <p>
+                        <label>Должность автора:</label><br>
+                        <input type="text" id="docAuthorPosition" size="45" placeholder="магистрант, к.ф-м.н., профессор">
+                    </p>
+
+                    <p>
+                        <label>Название материала:</label><br>
+                        <input type="text" id="docTitle" size="45" placeholder="Интеграция алгоритмов детекции...">
+                    </p>
+
+                    <p>
+                        <label>Структурное подразделение:</label><br>
+                        <input type="text" id="docDepartment" size="45" placeholder="Институт прикладной математики и компьютерных наук">
+                    </p>
+
+                    <p>
+                        <label>Краткое содержание:</label><br>
+                        <textarea id="docDescription" rows="4" cols="45" placeholder="В статье рассматриваются методы..."></textarea>
+                    </p>
+
+                    <p>
+                        <label>Публиковались ли материалы:</label><br>
+                        <select id="docPublished">
+                            <option value="не публиковались">Не публиковались</option>
+                            <option value="публиковались">Публиковались</option>
+                        </select>
+                    </p>
+
+                    <p>
+                        <label>Где публиковались:</label><br>
+                        <input type="text" id="docPublishedWhere" size="45" placeholder="Название журнала">
+                    </p>
+
+                    <p>
+                        <label>Заключение:</label><br>
+                        <select id="docConclusion">
+                            <option value="разрешить">Разрешить открытую публикацию</option>
+                            <option value="запретить">Запретить открытую публикацию</option>
+                        </select>
+                    </p>
+
+                    <p>
+                        <label>Издательство:</label><br>
+                        <input type="text" id="docPublisher" size="45" placeholder="сборник трудов конференции, ТУСУР, Россия">
+                    </p>
+
+                    <p>
+                        <label>Председатель комиссии:</label><br>
+                        <input type="text" id="docChairman" size="45" placeholder="Д.Д. Даммер, к. ф.-м. н, доцент">
+                    </p>
+
+                    <p>
+                        <label>Члены комиссии:</label><br>
+                        <textarea id="docMembers" rows="3" cols="45" placeholder="Нежельская Л.А., д-р физ.-мат. наук, профессор&#10;И.С. Шмырин, к.т.н., доцент"></textarea>
+                    </p>
+
+                    <p>
+                        <label>Начальник первого отдела:</label><br>
+                        <input type="text" id="docApproved" size="45" placeholder="А.М. Амельченко">
+                    </p>
+
+                    <p>
+                        <label>Специалист по экспортному контролю:</label><br>
+                        <input type="text" id="docExportControl" size="45" placeholder="Н.Н. Ходанович">
+                    </p>
+                </form>
+
+                <p>
+                    <button onclick="saveDocument()">Сохранить документ</button>
+                    <button onclick="downloadWord()">Скачать</button>
+                </p>
+
+                <p>
+                    <strong>Загрузить документ:</strong><br>
+                    <input type="file" id="fileInput" accept=".doc,.docx">
+                    <span id="fileName">Файл не выбран</span>
+                </p>
+
+                <hr>
+
+                <p id="message"></p>
+            </td>
+
+            <td width="55%" valign="top">
+                <h2>Внешний вид документа</h2>
+                <div id="documentPreview" style="border: 1px solid #ccc; padding: 30px; font-family: 'Times New Roman', Times, serif; font-size: 14px; line-height: 1.6; background: white;">
+                    
+                    <!-- УТВЕРЖДАЮ - правый верхний угол -->
+                    <div style="text-align: right; margin-bottom: 20px;">
+                        <div style="font-weight: bold; text-transform: uppercase;">УТВЕРЖДАЮ</div>
+                        <div style="margin-top: 5px;">Проректор по научной и инновационной деятельности</div>
+                        <div>Томского государственного университета</div>
+                        <div style="margin-top: 10px; display: flex; justify-content: flex-end; align-items: center;">
+                            <span style="display: inline-block; width: 200px; border-bottom: 1px solid #000; margin-right: 5px;">&nbsp;</span>
+                            <span id="previewApprover">А.В. Замятин</span>
+                        </div>
+                        <div style="margin-top: 5px;">
+                            <span id="previewDate">«______» ______________ 2025 г.</span>
+                        </div>
+                    </div>
+
+                    <!-- ЗАГОЛОВОК - по центру -->
+                    <div style="text-align: center; margin: 30px 0;">
+                        <div style="font-size: 18px; font-weight: bold;">ЭКСПЕРТНОЕ ЗАКЛЮЧЕНИЕ № <span id="previewNumber">_________</span></div>
+                        <div style="font-weight: bold; margin-top: 5px;">о возможности открытого опубликования</div>
+                    </div>
+
+                    <!-- ОСНОВНОЙ ТЕКСТ -->
+                    <div style="text-align: justify; margin: 20px 0;">
+                        <p>
+                            Экспертная комиссия <span id="previewDepartment">_________________</span>
+                        </p>
+                        <p>
+                            Федерального государственного автономного образовательного учреждения
+                            высшего образования «Национальный исследовательский Томский
+                            государственный университет» Министерства науки и высшего образования
+                            Российской Федерации, рассмотрев <span id="previewAuthor">_________________</span>
+                        </p>
+
+                        <p style="text-decoration: underline;">
+                            <span id="previewTitle">_________________</span>
+                        </p>
+
+                        <p>
+                            <span id="previewDescription">_________________</span>
+                        </p>
+
+                        <p>
+                            подтверждает, что в материале: <strong>не содержится</strong>
+                        </p>
+
+                        <p>
+                            информация с ограниченным доступом (Закон РФ «О государственной тайне»,
+                            Перечень сведений, подлежащих засекречиванию Минобрнауки РФ № 31с от 04.12.2023)
+                        </p>
+
+                        <p>
+                            <strong>не содержится</strong>
+                        </p>
+
+                        <p>
+                            информация, подпадающая под Списки контролируемых товаров, технологий,
+                            утверждённых постановлениями Правительства Российской Федерации:
+                        </p>
+                        <p style="font-size: 12px; margin-left: 20px;">
+                            № 1299 от 19.07.2022 двойного назначения;<br>
+                            № 1284 от 16.07.2022 химикатов, оборудования, технологий;<br>
+                            № 1285 от 16.07.2022 ядерных, специальных неядерных материалов, соответствующих технологий;<br>
+                            № 1286 от 16.07.2022 оборудование и материалы двойного назначения, применяемых в ядерных целях;<br>
+                            № 1287 от 16.07.2022 микроорганизмов, токсинов, оборудования, технологий;<br>
+                            № 1288 от 16.07.2022 оборудования, материалов, используемые при создании ракетного оружия
+                        </p>
+
+                        <p>
+                            Материалы публиковались в российских журналах <span id="previewPublished">_____________</span>
+                        </p>
+
+                        <p>
+                            На публикацию материалов <span id="previewConclusion">_____________</span>
+                        </p>
+
+                        <p>
+                            <strong>Заключение:</strong> <span id="previewConclusionText">_____________</span>
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+                            <span style="font-weight: bold;">Председатель комиссии</span>
+                            <span style="flex: 1; margin-left: 20px; text-decoration: underline;" id="previewChairman">_____________</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+                            <span style="font-weight: bold;">Члены комиссии</span>
+                            <span style="flex: 1; margin-left: 20px; text-decoration: underline;" id="previewMembers">_____________</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <div style="font-weight: bold;">СОГЛАСОВАНО:</div>
+                        <div style="margin: 5px 0;">
+                            Начальник первого отдела <span id="previewApproved">_____________</span>
+                        </div>
+                        <div style="margin: 5px 0;">
+                            Специалист по экспортному контролю ОНТИ НУ <span id="previewExportControl">_____________</span>
+                        </div>
+                        <div style="margin: 5px 0;">
+                            « ______ » ______________ 2025 г.
+                        </div>
+                    </div>
+
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <hr>
+    <p><a href="#" onclick="goBackFromEditor()">← Назад</a></p>
+
+    <script src="js/common.js"></script>
+    <script src="js/document.js"></script>
+
+</body>
+</html>

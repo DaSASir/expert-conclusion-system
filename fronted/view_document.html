@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр документа</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <h1>Экспертное заключение</h1>
+    <hr>
+
+    <p>
+        <strong>Пользователь:</strong> <span id="userName">Не авторизован</span>
+        <button onclick="logout()">Выйти</button>
+    </p>
+
+    <hr>
+
+    <p><a href="#" onclick="goBack()">← Назад</a></p>
+
+    <h2>Просмотр документа</h2>
+
+    <div id="documentContent">
+        <p>Загрузка...</p>
+    </div>
+
+    <div id="adminCommentBlock" style="display:none;">
+        <hr>
+        <h3>Комментарий от администратора:</h3>
+        <div id="adminComment" class="comment-block"></div>
+    </div>
+
+    <div id="userActions" style="display:none;">
+        <hr>
+        <h3>Действия:</h3>
+        <p>
+            <button id="btnUserEdit"
+                    onclick="editDocument()"
+                    style="display:none;">Отредактировать документ</button>
+            <button id="btnUserSubmit"
+                    onclick="submitDoc()"
+                    style="display:none;">Отправить на проверку</button>
+            <button onclick="downloadWord()">Скачать</button>
+        </p>
+    </div>
+
+    <div id="adminActions" style="display:none;">
+        <hr>
+        <h3>Действия администратора:</h3>
+        <p>
+            <button onclick="editDocument()">Отредактировать</button>
+            <button onclick="approveDoc()">Проверен</button>
+            <button onclick="rejectDoc()">Отклонить</button>
+            <button onclick="registerDoc()">Зарегистрировать</button>
+            <button onclick="downloadWord()">Скачать</button>
+        </p>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/view_document.js"></script>
+
+</body>
+</html>
