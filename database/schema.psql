@@ -1,0 +1,60 @@
+DROP TABLE IF EXISTS documents CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(200) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user'
+        CHECK (role IN ('user', 'admin')),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+
+    reg_number VARCHAR(50),
+    reg_date DATE,
+    registered_at TIMESTAMP,
+    registered_by INTEGER,
+
+    doc_date DATE,
+
+    author VARCHAR(300),
+    author_position VARCHAR(300),
+    author_email VARCHAR(200),
+    title VARCHAR(500) NOT NULL,
+    department VARCHAR(500),
+    description TEXT,
+    published VARCHAR(50) DEFAULT 'не публиковались',
+    published_where VARCHAR(500),
+    conclusion VARCHAR(50) DEFAULT 'разрешить',
+    publisher VARCHAR(500),
+    chairman VARCHAR(300),
+    members TEXT,
+    approved VARCHAR(300),
+    export_control VARCHAR(300),
+
+    status VARCHAR(30) NOT NULL DEFAULT 'draft'
+        CHECK (status IN ('draft', 'in_review', 'ready_to_sign', 'signed', 'rejected')),
+
+    admin_comment TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_documents_email  ON documents(author_email);
+CREATE INDEX idx_documents_status ON documents(status);
+CREATE INDEX idx_documents_date   ON documents(doc_date);
+CREATE INDEX idx_users_email      ON users(email);
+
+INSERT INTO users (email, password_hash, full_name, role) VALUES
+('user@example.com',  'user123',  'Студент',       'user'),
+('admin@example.com', 'admin123', 'Преподаватель', 'admin');
+
+SELECT 'Users:' AS table_name, COUNT(*) AS count FROM users
+UNION ALL
+SELECT 'Documents:', COUNT(*) FROM documents;
