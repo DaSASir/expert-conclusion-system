@@ -2,11 +2,20 @@
 #include <string>
 
 struct Document {
+    static constexpr size_t MAX_TITLE = 500;
+    static constexpr size_t MAX_AUTHOR = 300;
+    static constexpr size_t MAX_POSITION = 300;
+    static constexpr size_t MAX_EMAIL = 200;
+    static constexpr size_t MAX_DEPARTMENT = 500;
+    static constexpr size_t MAX_DESCRIPTION = 10000;
+    static constexpr size_t MAX_MEMBERS = 5000;
+    static constexpr size_t MAX_STATUS = 30;
+    static constexpr size_t MAX_COMMENT = 1000;
+
     int id = 0;
 
     std::string reg_number;
     std::string reg_date;
-
     std::string doc_date;
 
     std::string author;
@@ -30,35 +39,4 @@ struct Document {
     std::string updated_at;
     std::string registered_at;
     int registered_by = 0;
-
-    std::string validate() const {
-        if (title.empty()) {
-            return "Title is required";
-        }
-        if (title.length() > 500) {
-            return "Title too long (max 500)";
-        }
-        if (author.length() > 300) {
-            return "Author too long (max 300)";
-        }
-        if (author_position.length() > 300) {
-            return "Position too long (max 300)";
-        }
-        if (author_email.length() > 200) {
-            return "Email too long (max 200)";
-        }
-        if (department.length() > 500) {
-            return "Department too long (max 500)";
-        }
-        if (description.length() > 10000) {
-            return "Description too long (max 10000)";
-        }
-        if (members.length() > 5000) {
-            return "Members too long (max 5000)";
-        }
-        if (status.length() > 30) {
-            return "Status too long (max 30)";
-        }
-        return "";
-    }
 };

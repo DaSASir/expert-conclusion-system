@@ -1,6 +1,5 @@
 #pragma once
 #include <libpq-fe.h>
-#include <string>
 
 class Database {
 public:

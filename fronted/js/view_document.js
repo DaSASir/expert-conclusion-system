@@ -1,171 +1,170 @@
 const viewUser = requireAuth();
 if (viewUser) {
-    document.getElementById('userName').textContent =
-        viewUser.name + ' (' + viewUser.role + ')';
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) userNameEl.textContent = viewUser.name + ' (' + viewUser.role + ')';
+
+    initViewDocument();
 }
 
-const viewParams = new URLSearchParams(window.location.search);
-const viewDocId = viewParams.get('id');
-const isAdminView = viewParams.get('admin') === '1'
-    && viewUser
-    && viewUser.role === 'admin';
+function initViewDocument() {
+    const params = new URLSearchParams(window.location.search);
+    const viewDocId = parsePositiveInt(params.get('id'));
+    const isAdminView = params.get('admin') === '1' && viewUser.role === 'admin';
 
-let currentDoc = null;
+    let currentDoc = null;
 
-function loadDocument() {
-    if (!viewDocId) {
-        document.getElementById('documentContent').innerHTML =
-            '<p>Документ не указан</p>';
-        return;
-    }
+    function loadDocument() {
+        if (!viewDocId) {
+            document.getElementById('documentContent').textContent = 'Документ не указан';
+            return;
+        }
 
-    const idNum = parseInt(viewDocId, 10);
-    if (isNaN(idNum) || idNum <= 0) {
-        document.getElementById('documentContent').innerHTML =
-            '<p>Некорректный ID документа</p>';
-        return;
-    }
+        safeFetch('/api/documents/' + encodeURIComponent(viewDocId))
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(doc => {
+                if (!doc || doc.error) {
+                    document.getElementById('documentContent').textContent =
+                        'Ошибка: документ не найден';
+                    return;
+                }
 
-    fetch('/api/documents/' + encodeURIComponent(viewDocId))
-        .then(r => r.json())
-        .then(doc => {
-            if (doc.error) {
+                currentDoc = doc;
+
+                const row = (label, value) =>
+                    '<tr><td><strong>' + label + ':</strong></td><td>'
+                    + escapeHtml(value || '—') + '</td></tr>';
+
                 document.getElementById('documentContent').innerHTML =
-                    '<p>Ошибка: документ не найден</p>';
-                return;
-            }
+                    '<table>'
+                    + row('Регистрационный номер', doc.reg_number || '— (не зарегистрирован)')
+                    + row('Дата документа', doc.doc_date)
+                    + row('Статус', getStatusName(doc.status))
+                    + row('Автор', doc.author)
+                    + row('Должность автора', doc.author_position)
+                    + row('Название', doc.title)
+                    + row('Подразделение', doc.department)
+                    + row('Описание', doc.description)
+                    + row('Публиковались', doc.published)
+                    + row('Заключение', doc.conclusion)
+                    + row('Издательство', doc.publisher)
+                    + row('Председатель', doc.chairman)
+                    + row('Члены комиссии', doc.members)
+                    + row('Начальник отдела', doc.approved)
+                    + row('Экспортный контроль', doc.export_control)
+                    + '</table>';
 
-            currentDoc = doc;
-
-            let html = '<table>';
-            html += '<tr><td><strong>Регистрационный номер:</strong></td><td>' + escapeHtml(doc.reg_number || '— (не зарегистрирован)') + '</td></tr>';
-            html += '<tr><td><strong>Дата документа:</strong></td><td>' + escapeHtml(doc.doc_date || '—') + '</td></tr>';
-            html += '<tr><td><strong>Статус:</strong></td><td>' + escapeHtml(getStatusName(doc.status)) + '</td></tr>';
-            html += '<tr><td><strong>Автор:</strong></td><td>' + escapeHtml(doc.author || '—') + '</td></tr>';
-            html += '<tr><td><strong>Должность автора:</strong></td><td>' + escapeHtml(doc.author_position || '—') + '</td></tr>';
-            html += '<tr><td><strong>Название:</strong></td><td>' + escapeHtml(doc.title || '—') + '</td></tr>';
-            html += '<tr><td><strong>Подразделение:</strong></td><td>' + escapeHtml(doc.department || '—') + '</td></tr>';
-            html += '<tr><td><strong>Описание:</strong></td><td>' + escapeHtml(doc.description || '—') + '</td></tr>';
-            html += '<tr><td><strong>Публиковались:</strong></td><td>' + escapeHtml(doc.published || '—') + '</td></tr>';
-            html += '<tr><td><strong>Заключение:</strong></td><td>' + escapeHtml(doc.conclusion || '—') + '</td></tr>';
-            html += '<tr><td><strong>Издательство:</strong></td><td>' + escapeHtml(doc.publisher || '—') + '</td></tr>';
-            html += '<tr><td><strong>Председатель:</strong></td><td>' + escapeHtml(doc.chairman || '—') + '</td></tr>';
-            html += '<tr><td><strong>Члены комиссии:</strong></td><td>' + escapeHtml(doc.members || '—') + '</td></tr>';
-            html += '<tr><td><strong>Начальник отдела:</strong></td><td>' + escapeHtml(doc.approved || '—') + '</td></tr>';
-            html += '<tr><td><strong>Экспортный контроль:</strong></td><td>' + escapeHtml(doc.export_control || '—') + '</td></tr>';
-            html += '</table>';
-
-            document.getElementById('documentContent').innerHTML = html;
-
-            if (doc.admin_comment) {
-                document.getElementById('adminComment').textContent = doc.admin_comment;
-                document.getElementById('adminCommentBlock').style.display = 'block';
-            }
-
-            if (isAdminView) {
-                document.getElementById('adminActions').style.display = 'block';
-            } else if (viewUser && viewUser.role === 'user') {
-                document.getElementById('userActions').style.display = 'block';
-
-                if (doc.status === 'draft' || doc.status === 'rejected') {
-                    document.getElementById('btnUserEdit').style.display = 'inline-block';
+                if (doc.admin_comment) {
+                    document.getElementById('adminComment').textContent = doc.admin_comment;
+                    document.getElementById('adminCommentBlock').style.display = 'block';
                 }
-                if (doc.status === 'draft') {
-                    document.getElementById('btnUserSubmit').style.display = 'inline-block';
+
+                if (isAdminView) {
+                    document.getElementById('adminActions').style.display = 'block';
+                } else if (viewUser.role === 'user') {
+                    document.getElementById('userActions').style.display = 'block';
+
+                    if (doc.status === 'draft' || doc.status === 'rejected') {
+                        document.getElementById('btnUserEdit').style.display = 'inline-block';
+                    }
+                    if (doc.status === 'draft') {
+                        document.getElementById('btnUserSubmit').style.display = 'inline-block';
+                    }
                 }
-            }
-        })
-        .catch(() => {
-            document.getElementById('documentContent').innerHTML =
-                '<p>Ошибка загрузки</p>';
-        });
-}
-
-function editDocument() {
-    window.location.href = 'document.html?id=' + encodeURIComponent(viewDocId);
-}
-
-function submitDoc() {
-    if (!confirm('Отправить документ на проверку?')) return;
-
-    fetch('/api/documents/' + encodeURIComponent(viewDocId) + '/submit', { method: 'POST' })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert('Документ отправлен на проверку');
-                loadDocument();
-            }
-        });
-}
-
-function approveDoc() {
-    if (!confirm('Отметить документ как проверенный?')) return;
-
-    fetch('/api/documents/' + encodeURIComponent(viewDocId) + '/approve', { method: 'POST' })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) loadDocument();
-        });
-}
-
-function rejectDoc() {
-    const comment = prompt('Причина отклонения:');
-    if (comment === null) return;
-
-    if (comment.length > 1000) {
-        alert('Слишком длинный комментарий (макс. 1000)');
-        return;
+            })
+            .catch(() => {
+                document.getElementById('documentContent').textContent = 'Ошибка загрузки';
+            });
     }
 
-    fetch('/api/documents/' + encodeURIComponent(viewDocId) + '/reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment: comment })
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) loadDocument();
-        });
-}
-
-function registerDoc() {
-    if (!confirm('Зарегистрировать документ? Будет присвоен номер.')) return;
-
-    // ЗАЩИТА: передаём user_id с сервера, а не из формы
-    const user = getCurrentUser();
-    const userId = user ? user.id : 0;
-
-    fetch('/api/documents/' + encodeURIComponent(viewDocId) + '/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId })
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert('Документ зарегистрирован! Номер: ' + result.reg_number);
-                loadDocument();
-            } else {
-                alert('Ошибка: ' + (result.error || 'неизвестная'));
-            }
-        });
-}
-
-function goBack() {
-    const user = getCurrentUser();
-    if (user && user.role === 'admin') {
-        window.location.href = 'dashboard_admin.html';
-    } else {
-        window.location.href = 'dashboard_user.html';
+    function post(url, body) {
+        return safeFetch(url, {
+            method: 'POST',
+            headers: body ? { 'Content-Type': 'application/json' } : undefined,
+            body: body ? JSON.stringify(body) : undefined
+        }).then(r => r.json());
     }
-}
 
-function downloadWord() {
-    if (!currentDoc) {
-        alert('Документ ещё не загружен');
-        return;
+    function editDocument() {
+        if (viewDocId) window.location.href = 'document.html?id=' + viewDocId;
     }
-    downloadWordFile(currentDoc);
-}
 
-loadDocument();
+    function submitDoc() {
+        if (!viewDocId) return;
+        if (!confirm('Отправить документ на проверку?')) return;
+        post('/api/documents/' + viewDocId + '/submit')
+            .then(r => {
+                if (r && r.success) {
+                    alert('Документ отправлен на проверку');
+                    loadDocument();
+                }
+            })
+            .catch(() => alert('Ошибка соединения'));
+    }
+
+    function approveDoc() {
+        if (!viewDocId) return;
+        if (!confirm('Отметить документ как проверенный?')) return;
+        post('/api/documents/' + viewDocId + '/approve')
+            .then(r => { if (r && r.success) loadDocument(); })
+            .catch(() => alert('Ошибка соединения'));
+    }
+
+    function rejectDoc() {
+        if (!viewDocId) return;
+        const comment = prompt('Причина отклонения:');
+        if (comment === null) return;
+        if (comment.length > 1000) {
+            alert('Слишком длинный комментарий (макс. 1000)');
+            return;
+        }
+        post('/api/documents/' + viewDocId + '/reject', { comment: comment })
+            .then(r => { if (r && r.success) loadDocument(); })
+            .catch(() => alert('Ошибка соединения'));
+    }
+
+    function registerDoc() {
+        if (!viewDocId) return;
+        if (!confirm('Зарегистрировать документ? Будет присвоен номер.')) return;
+
+        const user = getCurrentUser();
+        const userId = user ? user.id : 0;
+
+        post('/api/documents/' + viewDocId + '/register', { user_id: userId })
+            .then(r => {
+                if (r && r.success) {
+                    alert('Документ зарегистрирован! Номер: ' + r.reg_number);
+                    loadDocument();
+                } else {
+                    alert('Ошибка: ' + ((r && r.error) || 'неизвестная'));
+                }
+            })
+            .catch(() => alert('Ошибка соединения'));
+    }
+
+    function goBack() {
+        window.location.href = viewUser.role === 'admin'
+            ? 'dashboard_admin.html'
+            : 'dashboard_user.html';
+    }
+
+    function downloadWord() {
+        if (!currentDoc) {
+            alert('Документ ещё не загружен');
+            return;
+        }
+        downloadWordFile(currentDoc);
+    }
+
+    window.editDocument = editDocument;
+    window.submitDoc = submitDoc;
+    window.approveDoc = approveDoc;
+    window.rejectDoc = rejectDoc;
+    window.registerDoc = registerDoc;
+    window.goBack = goBack;
+    window.downloadWord = downloadWord;
+
+    loadDocument();
+}

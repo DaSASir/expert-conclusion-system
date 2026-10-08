@@ -1,12 +1,11 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const docUser = requireAuth();
     if (!docUser) return;
 
-    document.getElementById('userName').textContent =
-        docUser.name + ' (' + docUser.role + ')';
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) userNameEl.textContent = docUser.name + ' (' + docUser.role + ')';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('id');
+    const editId = parsePositiveInt(new URLSearchParams(window.location.search).get('id'));
     const isAdmin = docUser.role === 'admin';
 
     if (isAdmin && !editId) {
@@ -52,35 +51,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileName = document.getElementById('fileName');
 
     function updatePreview() {
-        preview.department.textContent = fields.department.value || '_________________';
+        preview.department.textContent =
+            fields.department.value || '_________________';
 
-        const authorText = fields.author.value
+        preview.author.textContent = fields.author.value
             ? fields.author.value + ' (' + (fields.authorPosition.value || 'должность') + ')'
             : '_________________';
-        preview.author.textContent = authorText;
 
-        preview.title.textContent = fields.title.value || '_________________';
+        preview.title.textContent       = fields.title.value       || '_________________';
         preview.description.textContent = fields.description.value || '_________________';
-        preview.published.textContent = fields.published.value || '_____________';
+        preview.published.textContent   = fields.published.value   || '_____________';
 
         const conclusionText = fields.conclusion.value === 'разрешить' ? 'следует' : 'не следует';
         preview.conclusion.textContent = conclusionText;
 
-        const conclusionFull = fields.conclusion.value === 'разрешить'
-            ? 'разрешить открытую публикацию "' + (fields.title.value || 'название материала')
-              + '" в ' + (fields.publisher.value || 'издательство')
-            : 'запретить открытую публикацию "' + (fields.title.value || 'название материала') + '"';
-        preview.conclusionText.textContent = conclusionFull;
+        const t = fields.title.value || 'название материала';
+        preview.conclusionText.textContent = fields.conclusion.value === 'разрешить'
+            ? 'разрешить открытую публикацию "' + t + '" в ' +
+              (fields.publisher.value || 'издательство')
+            : 'запретить открытую публикацию "' + t + '"';
 
-        preview.chairman.textContent = fields.chairman.value || '_____________';
-        preview.members.textContent = fields.members.value || '_____________';
-        preview.approved.textContent = fields.approved.value || '_____________';
+        preview.chairman.textContent     = fields.chairman.value     || '_____________';
+        preview.members.textContent      = fields.members.value      || '_____________';
+        preview.approved.textContent     = fields.approved.value     || '_____________';
         preview.exportControl.textContent = fields.exportControl.value || '_____________';
-        preview.date.textContent = formatDateRu(fields.date.value);
+        preview.date.textContent         = formatDateRu(fields.date.value);
     }
 
     Object.values(fields).forEach(field => {
-        if (!field) return;
         field.addEventListener('input', updatePreview);
         field.addEventListener('change', updatePreview);
     });
@@ -107,33 +105,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function fillFromJson(doc) {
-        if (doc.doc_date)        fields.date.value = doc.doc_date;
-        if (doc.author)          fields.author.value = doc.author;
-        if (doc.author_position) fields.authorPosition.value = doc.author_position;
-        if (doc.title)           fields.title.value = doc.title;
-        if (doc.department)      fields.department.value = doc.department;
-        if (doc.description)     fields.description.value = doc.description;
-        if (doc.published)       fields.published.value = doc.published;
-        if (doc.published_where) fields.publishedWhere.value = doc.published_where;
-        if (doc.conclusion)      fields.conclusion.value = doc.conclusion;
-        if (doc.publisher)       fields.publisher.value = doc.publisher;
-        if (doc.chairman)        fields.chairman.value = doc.chairman;
-        if (doc.members)         fields.members.value = doc.members;
-        if (doc.approved)        fields.approved.value = doc.approved;
-        if (doc.export_control)  fields.exportControl.value = doc.export_control;
+        if (!doc) return;
 
-        if (doc.reg_number && preview.number) {
-            preview.number.textContent = doc.reg_number;
+        const map = {
+            doc_date:        fields.date,
+            author:          fields.author,
+            author_position: fields.authorPosition,
+            title:           fields.title,
+            department:      fields.department,
+            description:     fields.description,
+            published:       fields.published,
+            published_where: fields.publishedWhere,
+            conclusion:      fields.conclusion,
+            publisher:       fields.publisher,
+            chairman:        fields.chairman,
+            members:         fields.members,
+            approved:        fields.approved,
+            export_control:  fields.exportControl
+        };
+
+        for (const key in map) {
+            if (doc[key]) map[key].value = doc[key];
         }
+
+        if (doc.reg_number) preview.number.textContent = doc.reg_number;
 
         updatePreview();
     }
 
     function loadDocumentFromServer(id) {
-        fetch('/api/documents/' + encodeURIComponent(id))
-            .then(r => r.json())
+        safeFetch('/api/documents/' + encodeURIComponent(id))
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(doc => {
-                if (doc.error) {
+                if (doc && doc.error) {
                     showMessage(message, 'Ошибка загрузки', 'error');
                     return;
                 }
@@ -157,21 +164,19 @@ document.addEventListener('DOMContentLoaded', function() {
             method = 'PUT';
         }
 
-        fetch(url, {
+        safeFetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
             .then(r => r.json())
             .then(result => {
-                if (result.success) {
+                if (result && result.success) {
                     showMessage(message, 'Документ сохранён!', 'success');
                     setTimeout(() => {
-                        if (docUser.role === 'admin') {
-                            window.location.href = 'dashboard_admin.html';
-                        } else {
-                            window.location.href = 'dashboard_user.html';
-                        }
+                        window.location.href = docUser.role === 'admin'
+                            ? 'dashboard_admin.html'
+                            : 'dashboard_user.html';
                     }, 1000);
                 } else {
                     showMessage(message, 'Ошибка сохранения', 'error');
@@ -181,32 +186,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function downloadWord() {
-        const doc = collectJson();
-        downloadWordFile(doc);
+        downloadWordFile(collectJson());
         showMessage(message, 'Документ скачан!', 'success');
     }
 
     if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
             if (file.size > 5 * 1024 * 1024) {
                 showMessage(message, 'Файл слишком большой (макс. 5 МБ)', 'error');
+                fileInput.value = '';
+                return;
+            }
+
+            const lower = file.name.toLowerCase();
+            if (lower.endsWith('.docx')) {
+                showMessage(message,
+                    'Формат .docx не поддерживается. Сохраните файл как .doc или .json.',
+                    'error');
+                fileInput.value = '';
+                return;
+            }
+            if (!lower.endsWith('.doc') && !lower.endsWith('.json')) {
+                showMessage(message, 'Поддерживаются только .doc и .json', 'error');
+                fileInput.value = '';
                 return;
             }
 
             fileName.textContent = 'Файл: ' + file.name;
 
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function (event) {
                 const content = event.target.result;
                 let doc = null;
 
-                try {
-                    doc = JSON.parse(content);
-                } catch (e) {
-                    // Не JSON — пробуем как Word
+                if (lower.endsWith('.json')) {
+                    try { doc = JSON.parse(content); } catch (e) { doc = null; }
+                } else {
                     doc = parseWordToJson(content);
                 }
 
@@ -214,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fillFromJson(doc);
                     showMessage(message, 'Документ загружен!', 'success');
                 } else {
-                    showMessage(message, 'Не удалось извлечь данные', 'error');
+                    showMessage(message, 'Не удалось извлечь данные из файла', 'error');
                 }
             };
             reader.readAsText(file);
@@ -222,20 +240,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function goBackFromEditor() {
-        if (docUser.role === 'admin') {
-            window.location.href = 'dashboard_admin.html';
-        } else {
-            window.location.href = 'dashboard_user.html';
-        }
+        window.location.href = docUser.role === 'admin'
+            ? 'dashboard_admin.html'
+            : 'dashboard_user.html';
     }
 
     window.saveDocument = saveDocument;
     window.downloadWord = downloadWord;
     window.goBackFromEditor = goBackFromEditor;
 
-    if (editId) {
-        loadDocumentFromServer(editId);
-    }
-
+    if (editId) loadDocumentFromServer(editId);
     updatePreview();
 });

@@ -6,7 +6,7 @@ static const std::string NAME = "expert_db";
 static const std::string USER = "postgres";
 static const std::string PASS = "Qwerty12345";
 static const int SERV_PORT = 8080;
-static const std::string FRONT = "E:/TSU/KURSOVAYA/fronted";
+static const std::string FRONT = "E:/TSU/KURSOVAYA/frontend";
 
 
 std::string Config::dbHost() {

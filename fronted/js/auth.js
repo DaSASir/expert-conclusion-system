@@ -5,73 +5,65 @@ const message = document.getElementById('message');
 
 function loginUser(email, password) {
     if (!email || !password) {
-        message.textContent = 'Заполните все поля';
+        showMessage(message, 'Заполните все поля', 'error');
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showMessage(message, 'Некорректный email', 'error');
         return;
     }
 
-    if (email.length > 100 || password.length > 100) {
-        message.textContent = 'Слишком длинный ввод';
-        return;
-    }
+    showMessage(message, 'Проверка...', 'info');
 
-    message.textContent = 'Проверка...';
-
-    fetch('/api/login', {
+    safeFetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: password })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Ошибка сервера');
-        }
-        return response.json();
-    })
-    .then(result => {
-        if (result.success && result.user) {
-            message.textContent = 'Вход выполнен! Перенаправление...';
+    .then(r => r.json().then(data => ({ ok: r.ok, data: data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success && data.user) {
+            showMessage(message, 'Вход выполнен! Перенаправление...', 'success');
 
+            const u = data.user;
             const safeUser = {
-                id: result.user.id,
-                email: result.user.email,
-                name: result.user.name,
-                role: result.user.role
+                id: typeof u.id === 'number' ? u.id : 0,
+                email: String(u.email || ''),
+                name: String(u.name || ''),
+                role: u.role === 'admin' ? 'admin' : 'user'
             };
-            localStorage.setItem('currentUser', JSON.stringify(safeUser));
 
-            setTimeout(function() {
-                if (safeUser.role === 'admin') {
-                    window.location.href = 'dashboard_admin.html';
-                } else {
-                    window.location.href = 'dashboard_user.html';
-                }
+            try {
+                localStorage.setItem('currentUser', JSON.stringify(safeUser));
+            } catch (e) {
+                showMessage(message, 'Не удалось сохранить сессию', 'error');
+                return;
+            }
+
+            setTimeout(() => {
+                window.location.href = safeUser.role === 'admin'
+                    ? 'dashboard_admin.html'
+                    : 'dashboard_user.html';
             }, 500);
         } else {
-            message.textContent = 'Неверный email или пароль';
+            showMessage(message, 'Неверный email или пароль', 'error');
         }
     })
-    .catch(error => {
-        message.textContent = 'Ошибка подключения к серверу';
-    });
+    .catch(() => showMessage(message, 'Ошибка подключения к серверу', 'error'));
 }
 
 if (loginForm) {
-    loginForm.addEventListener('submit', function(event) {
+    loginForm.addEventListener('submit', function (event) {
         event.preventDefault();
-        loginUser(
-            emailInput.value.trim(),
-            passwordInput.value.trim()
-        );
+        loginUser(emailInput.value.trim(), passwordInput.value.trim());
     });
 }
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     const user = getCurrentUser();
     if (user) {
-        if (user.role === 'admin') {
-            window.location.href = 'dashboard_admin.html';
-        } else {
-            window.location.href = 'dashboard_user.html';
-        }
+        window.location.href = user.role === 'admin'
+            ? 'dashboard_admin.html'
+            : 'dashboard_user.html';
     }
 });

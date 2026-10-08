@@ -3,66 +3,64 @@ if (!adminUser) {
 } else if (adminUser.role !== 'admin') {
     window.location.href = 'dashboard_user.html';
 } else {
-    document.getElementById('userName').textContent =
-        adminUser.name + ' (' + adminUser.role + ')';
+    const el = document.getElementById('userName');
+    if (el) el.textContent = adminUser.name + ' (' + adminUser.role + ')';
+
+    loadAllDocuments();
 }
 
 function loadAllDocuments() {
     const status = document.getElementById('statusFilter').value;
     let url = '/api/all-documents';
-    if (status) {
-        url += '?status=' + encodeURIComponent(status);
-    }
+    if (status) url += '?status=' + encodeURIComponent(status);
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
+    safeFetch(url)
+        .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
         })
         .then(docs => {
             const container = document.getElementById('documentsList');
 
-            if (!docs || docs.length === 0) {
+            if (!Array.isArray(docs) || !docs.length) {
                 container.innerHTML = '<p>Нет документов с выбранным статусом</p>';
                 return;
             }
 
-            let html = '<table>';
-            html += '<tr>';
-            html += '<th>№</th>';
-            html += '<th>Рег. номер</th>';
-            html += '<th>Автор</th>';
-            html += '<th>Название</th>';
-            html += '<th>Дата документа</th>';
-            html += '<th>Статус</th>';
-            html += '<th>Действия</th>';
-            html += '</tr>';
+            let html = '<table><tr>'
+                + '<th>№</th><th>Рег. номер</th><th>Автор</th>'
+                + '<th>Название</th><th>Дата документа</th>'
+                + '<th>Статус</th><th>Действия</th></tr>';
 
             docs.forEach((doc, i) => {
-                html += '<tr>';
-                html += '<td>' + (i + 1) + '</td>';
-                html += '<td>' + escapeHtml(doc.reg_number || '—') + '</td>';
-                html += '<td>' + escapeHtml(doc.author || '—') + '</td>';
-                html += '<td>' + escapeHtml(doc.title || '—') + '</td>';
-                html += '<td>' + escapeHtml(doc.doc_date || '') + '</td>';
-                html += '<td>' + escapeHtml(getStatusName(doc.status)) + '</td>';
-                html += '<td>';
-                html += '<button onclick="openDocument(' + doc.id + ')">Открыть документ</button>';
-                html += '</td></tr>';
+                const id = parsePositiveInt(doc.id);
+                html += '<tr>'
+                    + '<td>' + (i + 1) + '</td>'
+                    + '<td>' + escapeHtml(doc.reg_number || '—') + '</td>'
+                    + '<td>' + escapeHtml(doc.author || '—') + '</td>'
+                    + '<td>' + escapeHtml(doc.title || '—') + '</td>'
+                    + '<td>' + escapeHtml(doc.doc_date || '') + '</td>'
+                    + '<td>' + escapeHtml(getStatusName(doc.status)) + '</td>'
+                    + '<td>' + (id !== null
+                        ? '<button type="button" data-open-id="' + id + '">Открыть документ</button>'
+                        : '—') + '</td>'
+                    + '</tr>';
             });
-
             html += '</table>';
             container.innerHTML = html;
+
+            container.querySelectorAll('button[data-open-id]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const id = parsePositiveInt(this.getAttribute('data-open-id'));
+                    if (id !== null) {
+                        window.location.href = 'view_document.html?id=' + id + '&admin=1';
+                    }
+                });
+            });
         })
-        .catch(error => {
+        .catch(err => {
             document.getElementById('documentsList').innerHTML =
                 '<p>Ошибка загрузки</p>';
-            console.error('Ошибка:', error);
+            console.error(err);
         });
 }
-
-function openDocument(id) {
-    window.location.href = 'view_document.html?id=' + encodeURIComponent(id) + '&admin=1';
-}
-
-loadAllDocuments();
